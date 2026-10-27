@@ -1,4 +1,5 @@
 import React from 'react';
+import { useDocumentTitle } from '@/utils/useDocumentTitle';
 import { HeroSection } from './HeroSection';
 import { TrustHighlights } from './TrustHighlights';
 import { CategoryGrid } from './CategoryGrid';
@@ -7,6 +8,8 @@ import { NewArrivalsSection } from './NewArrivalsSection';
 import { SampleOffersSection } from './SampleOffersSection';
 
 export const HomePage: React.FC = () => {
+  useDocumentTitle('Home', 'Discover authentic smartphones, laptops, audio, and accessories in Bangladesh with transparent BDT pricing.');
+
   return (
     <div className="flex flex-col">
       {/* 1. Focused Hero linking to catalog */}

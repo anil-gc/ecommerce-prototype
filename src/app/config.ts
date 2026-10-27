@@ -79,7 +79,7 @@ export const siteConfig: SiteConfig = {
     info: [
       { label: 'Store Overview', href: '/' },
       { label: 'Product Catalog', href: '/shop' },
-      { label: 'Demo Architecture', href: '#demo-disclaimer' },
+      { label: 'Shopping Cart', href: '/cart' },
     ],
   },
   delivery: {

@@ -15,6 +15,7 @@ import { useResolvedCart } from './useResolvedCart';
 import { useCartStore } from './cartStore';
 import { formatBDT } from '@/utils/currency';
 import { siteConfig } from '@/app/config';
+import { useDocumentTitle } from '@/utils/useDocumentTitle';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ProductImage } from '@/components/ui/ProductImage';
@@ -35,6 +36,11 @@ export const CartPage: React.FC = () => {
       : siteConfig.delivery.outsideDhakaPoisha;
 
   const totalPoisha = subtotalPoisha + deliveryFeePoisha;
+
+  useDocumentTitle(
+    `Shopping Cart (${totalItems})`,
+    'Review your selected gadgets, edit quantities, and preview Bangladesh delivery charges.',
+  );
 
   if (isEmpty) {
     return (

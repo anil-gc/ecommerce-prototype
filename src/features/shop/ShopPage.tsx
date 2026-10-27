@@ -11,6 +11,7 @@ import {
 import { useProducts, useCategories, useBrands } from '@/services/useCatalog';
 import type { ProductQueryParams, ProductSortOption } from '@/types/catalog';
 import { takaToPoisha } from '@/utils/currency';
+import { useDocumentTitle } from '@/utils/useDocumentTitle';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
@@ -48,6 +49,15 @@ export const ShopPage: React.FC = () => {
   // Active category / brand objects for display
   const activeCategory = categories.find((c) => c.slug === categorySlug);
   const activeBrand = brands.find((b) => b.slug === brandSlug);
+
+  useDocumentTitle(
+    activeCategory
+      ? `${activeCategory.name} — Gadgets`
+      : activeBrand
+        ? `${activeBrand.name} Tech`
+        : 'Store Catalog',
+    'Explore Bangladesh tech gadgets with faceted filtering and integer poisha BDT pricing.',
+  );
 
   // Build API Query Params
   const queryParams: ProductQueryParams = useMemo(() => {

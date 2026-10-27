@@ -17,6 +17,7 @@ import { useProductBySlug, useRelatedProducts } from '@/services/useCatalog';
 import { formatBDT } from '@/utils/currency';
 import { siteConfig } from '@/app/config';
 import { useCartStore } from '@/features/cart/cartStore';
+import { useDocumentTitle } from '@/utils/useDocumentTitle';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -40,6 +41,11 @@ export const ProductDetailPage: React.FC = () => {
   } = useProductBySlug(slug);
 
   const { data: relatedProducts = [] } = useRelatedProducts(product?.id, 4);
+
+  useDocumentTitle(
+    product ? product.name : 'Product Details',
+    product ? product.description : undefined,
+  );
 
   // Loading State
   if (isLoading) {

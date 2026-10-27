@@ -11,6 +11,7 @@ import {
   PackageOpen,
 } from 'lucide-react';
 import { formatBDT } from '@/utils/currency';
+import { useDocumentTitle } from '@/utils/useDocumentTitle';
 import { Button } from '@/components/ui/Button';
 import {
   type DemoOrderConfirmation,
@@ -36,6 +37,8 @@ export const OrderSuccessPage: React.FC = () => {
       setCheckedStorage(true);
     }
   }, []);
+
+  useDocumentTitle('Demo Order Confirmation', 'Your simulated gadget order has been placed.');
 
   if (!checkedStorage) {
     return (

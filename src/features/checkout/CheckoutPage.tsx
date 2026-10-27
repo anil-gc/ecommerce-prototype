@@ -13,6 +13,7 @@ import { useCartStore } from '@/features/cart/cartStore';
 import { formatBDT } from '@/utils/currency';
 import { validateBangladeshPhone } from '@/utils/phone';
 import { siteConfig } from '@/app/config';
+import { useDocumentTitle } from '@/utils/useDocumentTitle';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -51,6 +52,11 @@ export const CheckoutPage: React.FC = () => {
       : siteConfig.delivery.outsideDhakaPoisha;
 
   const totalPoisha = subtotalPoisha + deliveryFeePoisha;
+
+  useDocumentTitle(
+    'Demo Checkout',
+    'Complete your demo purchase simulation with sample details and Bangladesh delivery rates.',
+  );
 
   // Handle empty cart access
   if (isEmpty) {

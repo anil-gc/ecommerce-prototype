@@ -2,8 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Home, ShoppingBag, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useDocumentTitle } from '@/utils/useDocumentTitle';
 
 export const NotFoundPage: React.FC = () => {
+  useDocumentTitle('404 Page Not Found', 'The requested page or product could not be found.');
   return (
     <div className="min-h-[70vh] flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full text-center space-y-6">

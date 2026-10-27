@@ -26,7 +26,7 @@ export const Footer: React.FC = () => {
             </p>
             <div className="flex items-center gap-2 text-xs text-emerald-400 font-medium">
               <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>Phase 1 Architecture Foundation</span>
+              <span>Verified Frontend Prototype</span>
             </div>
           </div>
 
