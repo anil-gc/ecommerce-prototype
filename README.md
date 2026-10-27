@@ -36,6 +36,31 @@ npm run preview
 
 ---
 
+## 🧭 Routes & Features (Phase 2 Storefront)
+
+| Route | Purpose | Features |
+| :--- | :--- | :--- |
+| `/` | **Storefront Homepage** | Focused hero, architecture highlights, department navigation, featured devices, new arrivals, and sample promotional offers. |
+| `/shop` | **Full Store Catalog** | Faceted filtering (category, brand, BDT price range, in-stock), search query, sorting, active filter chips, and pagination. |
+| `/category/:slug` | **Category Filtered View** | Pre-filtered catalog for departments (Smartphones, Laptops, Audio, Smartwatches, Gaming, Chargers). Unknown slugs render recovery 404 state. |
+| `/product/:slug` | **Product Detail Page (PDP)** | Multi-image gallery with thumbnail switcher, specifications table, stock availability, Bangladesh delivery estimate, and related products. |
+| `*` | **Catch-all 404 Page** | Accessible error screen with clear navigation links back to Home and Shop. |
+
+---
+
+## 🔍 Development-Only Inspection Utilities
+
+Per Phase 2 requirements, the catalog service provides transparent, non-intrusive URL parameters for QA and reviewing loading and error states without altering deterministic production behavior:
+
+1. **Simulate Network Latency / Inspect Loading Skeletons**:
+   - Add `?dev_delay=3000` to any catalog URL (e.g., `http://localhost:5173/shop?dev_delay=3000`).
+   - The mock service will artificially hold the query for 3 seconds, letting you inspect skeleton loaders and layout stability.
+2. **Simulate Network Failure / Inspect Retryable Error States**:
+   - Add `?dev_error=true` to any catalog URL (e.g., `http://localhost:5173/shop?dev_error=true`).
+   - The catalog query triggers a recoverable error view equipped with an interactive **"Retry Request"** button.
+
+---
+
 ## 🏛️ Architecture & Project Structure
 
 The project maintains clear layer boundaries, avoiding unnecessary abstractions while ensuring strong isolation between UI components, state management, and data access.
@@ -51,16 +76,17 @@ sakil-ecommerce/
 │   ├── components/             # Reusable UI & navigation components
 │   │   ├── feedback/           # DemoNotice banner & status feedback
 │   │   ├── navigation/         # Navbar, MobileMenu, Footer, SkipToContent
-│   │   └── ui/                 # Accessible Button, Input, Select, Badge, Card, Skeleton, EmptyState, InlineError, ProductImage
+│   │   └── ui/                 # Accessible Button, Input, Select, Badge, Card, Skeleton, EmptyState, InlineError, ProductImage, ProductCard
 │   ├── features/               # Feature domain modules
-│   │   ├── home/               # Homepage hero, trust highlights, categories, & featured showcase
-│   │   ├── shop/               # Foundation catalog browser with URL search parameter sync
+│   │   ├── home/               # Homepage hero, trust highlights, categories, featured, new arrivals, offers
+│   │   ├── shop/               # Store catalog with FilterSidebar, MobileFilterDrawer, and pagination
+│   │   ├── product/            # ProductDetailPage with gallery, specs, and related devices
 │   │   └── not-found/          # User-friendly 404 page
 │   ├── layouts/                # AppShell container with skip-link, header, & footer
-│   ├── mock/                   # Deterministic demo fixtures for categories, brands, & products
+│   ├── mock/                   # 27 sample products across 6 departments and 8 brands
 │   ├── services/               # Data access layer
 │   │   ├── catalogService.ts   # CatalogService interface & singleton export
-│   │   ├── mockCatalogService.ts # Asynchronous mock service with latency simulation
+│   │   ├── mockCatalogService.ts # Asynchronous mock service with latency simulation & dev overrides
 │   │   └── useCatalog.ts       # TanStack Query hooks consuming CatalogService
 │   ├── test/                   # Vitest setup & testing utilities
 │   ├── types/                  # Typed domain models (Product, Category, Brand, QueryParams)
@@ -83,13 +109,13 @@ sakil-ecommerce/
 
 - **Canvas & Typography**: White/light-gray background (`bg-slate-50`), dark navy typography (`text-slate-900`) for visual hierarchy and readability.
 - **Primary Actions**: Emerald (`#059669` / `bg-emerald-600`), representing tech, growth, and trust in Bangladesh.
-- **Borders & Elevation**: Restrained borders (`border-slate-200`) and subtle shadows (`shadow-xs` / `shadow-sm`) keep focus squarely on product imagery.
+- **Borders & Elevation**: Restrained borders (`border-slate-200`) and subtle shadows (`shadow-2xs` / `shadow-xs`) keep focus squarely on product imagery.
 - **Accessibility (a11y)**:
   - Skip-to-content keyboard link (`#main-content`).
   - High-contrast focus rings (`focus-visible:ring-emerald-600 focus-visible:ring-offset-2`).
   - Semantic HTML (`<header>`, `<nav>`, `<main>`, `<article>`, `<aside>`, `<footer>`).
   - Form controls with `aria-invalid`, `aria-describedby`, and associated `InlineError`.
-  - Mobile menu dialog with ESC-key dismissal and focus restoration.
+  - Mobile filter drawer and mobile navigation with ESC-key dismissal and focus restoration.
 - **Responsive Layout**: Designed mobile-first, tested and verified across mobile (360px), tablet (768px), and desktop (1440px).
 
 ---
@@ -114,8 +140,8 @@ sakil-ecommerce/
 ## 🔌 Asynchronous Service Boundary
 
 - **Decoupled from Fixtures**: Page components and UI widgets never import mock fixture files directly.
-- **Service Contract**: `CatalogService` defines methods (`getProducts`, `getProductBySlug`, `getFeaturedProducts`, `getCategories`, `getBrands`).
-- **TanStack Query Ready**: The UI communicates via custom React Query hooks (`useFeaturedProducts`, `useCategories`, `useProducts`), providing built-in caching, background refetching, and structured loading/error states.
+- **Service Contract**: `CatalogService` defines methods (`getProducts`, `getProductBySlug`, `getFeaturedProducts`, `getNewArrivals`, `getOffers`, `getRelatedProducts`, `getCategories`, `getBrands`).
+- **TanStack Query Ready**: The UI communicates via custom React Query hooks (`useFeaturedProducts`, `useNewArrivals`, `useOffers`, `useRelatedProducts`, `useCategories`, `useProducts`), providing built-in caching, background refetching, and structured loading/error states.
 - **Swappable Backend (Phase 5 ready)**: An API client or Django/DRF adapter can be swapped behind `src/services/catalogService.ts` without touching React components.
 
 ---
@@ -124,7 +150,7 @@ sakil-ecommerce/
 
 - **Frontend Only**: No real database, authentication service, or payment gateway.
 - **Simulated Fixtures**: All products, prices, and inventory levels are demo fixtures, not live retail claims.
-- **No Fake Controls in Phase 1**: Per Phase 1 requirements, navigation exposes only working links. Fake account avatars, fake wishlist counters, and non-functional cart controls have been excluded until their respective phases.
+- **Phase 2 Scope Boundary**: Purchasing controls, cart additions, quantity modifiers, and checkout belong to Phase 3. Products visibly display real-time availability without inactive or non-functional purchase buttons.
 - **Notice Bar**: A visible demo disclaimer informs visitors that this is an engineering prototype.
 
 ---
@@ -132,18 +158,17 @@ sakil-ecommerce/
 ## 📋 Phase Roadmap & Progress
 
 - [x] **Phase 1 — Foundation and Design System** *(Completed)*
-  - [x] Node v22.13.0 environment verification and Vite 6 setup.
-  - [x] Tailwind CSS v4 setup via `@tailwindcss/vite`.
-  - [x] Clean directory structure and reusable design tokens.
-  - [x] Accessible UI components: `Button`, `Input`, `Select`, `Badge`, `Card`, `Skeleton`, `EmptyState`, `InlineError`, `ProductImage`.
-  - [x] Responsive AppShell: logo, working navigation, mobile menu drawer, main area, footer, skip-to-content.
-  - [x] Foundation homepage with hero, trust highlights, categories, and async featured products.
-  - [x] Useful 404 page with recovery navigation.
-  - [x] Typed `Product`, `Category`, `Brand` models with integer poisha monetary storage.
-  - [x] Currency formatter utility using `Intl.NumberFormat('en-BD')`.
-  - [x] Asynchronous `CatalogService` interface and `MockCatalogService` implementation with TanStack Query hooks.
-  - [x] Vitest unit test suite (18 tests passing) and ESLint validation (0 errors).
-- [ ] **Phase 2 — Storefront and Product Catalog**
+- [x] **Phase 2 — Storefront and Product Catalog** *(Completed)*
+  - [x] Created 27 consistent sample products across all 6 departments and 8 brands with both in-stock and out-of-stock items.
+  - [x] Responsive product cards with fixed aspect ratios and image error fallback.
+  - [x] Complete homepage with focused hero, category navigation, featured devices, new arrivals, and fixture-derived offers.
+  - [x] Full route implementation (`/`, `/shop`, `/category/:slug`, `/product/:slug`, 404).
+  - [x] Faceted catalog filtering (category, brand, BDT price range, in-stock status) working synchronously with search and sorting.
+  - [x] URL Search parameter synchronization (browser history, refresh, deep-linking, malformed parameter handling).
+  - [x] Accessible mobile filter drawer with active filter counter badge, apply, and reset actions.
+  - [x] Product detail page with image gallery, specs table, availability notice, delivery estimate, and related products.
+  - [x] Documented dev inspection overrides (`?dev_delay=3000`, `?dev_error=true`).
+  - [x] Automated test suite expanded to 24 tests; 0 ESLint errors; production build verified.
 - [ ] **Phase 3 — Cart and Demo Checkout**
 - [ ] **Phase 4 — Polish, Testing, and Deployment Preparation**
 - [ ] **Phase 5 — Optional Django API Connection**

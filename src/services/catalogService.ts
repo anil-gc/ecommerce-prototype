@@ -35,6 +35,21 @@ export interface CatalogService {
   getFeaturedProducts(limit?: number): Promise<Product[]>;
 
   /**
+   * Retrieves recently added products for new arrival showcases.
+   */
+  getNewArrivals(limit?: number): Promise<Product[]>;
+
+  /**
+   * Retrieves products with valid promotional discounts for sample offers.
+   */
+  getOffers(limit?: number): Promise<Product[]>;
+
+  /**
+   * Retrieves related products for a product detail view based on category or brand.
+   */
+  getRelatedProducts(productId: string, limit?: number): Promise<Product[]>;
+
+  /**
    * Retrieves all product categories.
    */
   getCategories(): Promise<Category[]>;

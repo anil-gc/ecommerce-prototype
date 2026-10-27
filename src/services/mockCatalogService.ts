@@ -8,19 +8,41 @@ import type {
 } from '@/types/catalog';
 import type { CatalogService } from './catalogService';
 
+function getDevOverrides(): { latency?: number; forceError?: boolean } {
+  if (typeof window === 'undefined') return {};
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const devDelay = params.get('dev_delay');
+    const devError = params.get('dev_error');
+    return {
+      latency: devDelay ? Math.max(0, parseInt(devDelay, 10)) : undefined,
+      forceError: devError === 'true' || devError === '1',
+    };
+  } catch {
+    return {};
+  }
+}
+
 export class MockCatalogService implements CatalogService {
   private products: Product[] = [...MOCK_PRODUCTS];
   private categories: Category[] = [...MOCK_CATEGORIES];
   private brands: Brand[] = [...MOCK_BRANDS];
   private simulatedLatencyMs: number;
 
-  constructor(simulatedLatencyMs = 150) {
+  constructor(simulatedLatencyMs = 120) {
     this.simulatedLatencyMs = simulatedLatencyMs;
   }
 
   private async delay(): Promise<void> {
-    if (this.simulatedLatencyMs <= 0) return;
-    return new Promise((resolve) => setTimeout(resolve, this.simulatedLatencyMs));
+    const dev = getDevOverrides();
+    if (dev.forceError) {
+      throw new Error(
+        'Simulated catalog network error (triggered via dev_error URL parameter). Click retry to test recovery.',
+      );
+    }
+    const ms = dev.latency ?? this.simulatedLatencyMs;
+    if (ms <= 0) return;
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   async getProducts(params?: ProductQueryParams): Promise<PaginatedProducts> {
@@ -28,6 +50,7 @@ export class MockCatalogService implements CatalogService {
 
     let filtered = [...this.products];
 
+    // Search query matching against name, description, brand, or category
     if (params?.query) {
       const q = params.query.toLowerCase().trim();
       filtered = filtered.filter(
@@ -39,26 +62,32 @@ export class MockCatalogService implements CatalogService {
       );
     }
 
+    // Category filter
     if (params?.categorySlug) {
       filtered = filtered.filter((p) => p.category.slug === params.categorySlug);
     }
 
+    // Brand filter
     if (params?.brandSlug) {
       filtered = filtered.filter((p) => p.brand.slug === params.brandSlug);
     }
 
+    // Min price filter (in integer poisha)
     if (typeof params?.minPricePoisha === 'number') {
       filtered = filtered.filter((p) => p.price >= params.minPricePoisha!);
     }
 
+    // Max price filter (in integer poisha)
     if (typeof params?.maxPricePoisha === 'number') {
       filtered = filtered.filter((p) => p.price <= params.maxPricePoisha!);
     }
 
+    // In-stock only filter
     if (params?.inStockOnly) {
       filtered = filtered.filter((p) => p.stock > 0);
     }
 
+    // Featured only filter
     if (params?.featuredOnly) {
       filtered = filtered.filter((p) => p.isFeatured);
     }
@@ -83,7 +112,6 @@ export class MockCatalogService implements CatalogService {
         break;
       case 'featured':
       default:
-        // Featured products first, then by stock
         filtered.sort((a, b) => {
           if (a.isFeatured && !b.isFeatured) return -1;
           if (!a.isFeatured && b.isFeatured) return 1;
@@ -126,6 +154,45 @@ export class MockCatalogService implements CatalogService {
       .filter((p) => p.isFeatured)
       .slice(0, limit)
       .map((p) => ({ ...p }));
+  }
+
+  async getNewArrivals(limit = 6): Promise<Product[]> {
+    await this.delay();
+    return [...this.products]
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      })
+      .slice(0, limit)
+      .map((p) => ({ ...p }));
+  }
+
+  async getOffers(limit = 6): Promise<Product[]> {
+    await this.delay();
+    return this.products
+      .filter((p) => p.compareAtPrice && p.compareAtPrice > p.price)
+      .sort((a, b) => {
+        const discountA = (a.compareAtPrice! - a.price) / a.compareAtPrice!;
+        const discountB = (b.compareAtPrice! - b.price) / b.compareAtPrice!;
+        return discountB - discountA;
+      })
+      .slice(0, limit)
+      .map((p) => ({ ...p }));
+  }
+
+  async getRelatedProducts(productId: string, limit = 4): Promise<Product[]> {
+    await this.delay();
+    const target = this.products.find((p) => p.id === productId);
+    if (!target) return [];
+
+    const related = this.products.filter(
+      (p) =>
+        p.id !== productId &&
+        (p.category.slug === target.category.slug || p.brand.slug === target.brand.slug),
+    );
+
+    return related.slice(0, limit).map((p) => ({ ...p }));
   }
 
   async getCategories(): Promise<Category[]> {

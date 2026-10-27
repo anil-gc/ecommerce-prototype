@@ -1,7 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppShell } from '@/layouts/AppShell';
 import { HomePage } from '@/features/home/HomePage';
-import { ShopFoundationPage } from '@/features/shop/ShopFoundationPage';
+import { ShopPage } from '@/features/shop/ShopPage';
+import { CategoryPage } from '@/features/shop/CategoryPage';
+import { ProductDetailPage } from '@/features/product/ProductDetailPage';
 import { NotFoundPage } from '@/features/not-found/NotFoundPage';
 
 export const router = createBrowserRouter([
@@ -15,7 +17,15 @@ export const router = createBrowserRouter([
       },
       {
         path: 'shop',
-        element: <ShopFoundationPage />,
+        element: <ShopPage />,
+      },
+      {
+        path: 'category/:slug',
+        element: <CategoryPage />,
+      },
+      {
+        path: 'product/:slug',
+        element: <ProductDetailPage />,
       },
       {
         path: '*',

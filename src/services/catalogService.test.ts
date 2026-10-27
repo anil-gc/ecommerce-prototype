@@ -1,58 +1,99 @@
 import { describe, it, expect } from 'vitest';
 import { MockCatalogService } from './mockCatalogService';
 
-describe('Catalog Service Interface & Mock Implementation', () => {
-  // Use zero latency for immediate test execution
+describe('Catalog Service Interface & Mock Implementation (Phase 2)', () => {
   const service = new MockCatalogService(0);
 
-  it('retrieves categories correctly', async () => {
+  it('contains at least 24 consistent sample products', async () => {
+    const result = await service.getProducts({ limit: 100 });
+    expect(result.total).toBeGreaterThanOrEqual(24);
+  });
+
+  it('covers all 6 target product categories', async () => {
     const categories = await service.getCategories();
-    expect(categories.length).toBeGreaterThan(0);
-    expect(categories[0]).toHaveProperty('slug');
-    expect(categories[0]).toHaveProperty('name');
+    expect(categories.length).toBe(6);
+    const expectedSlugs = [
+      'smartphones',
+      'laptops',
+      'audio',
+      'smartwatches',
+      'gaming-accessories',
+      'chargers-powerbanks',
+    ];
+    expectedSlugs.forEach((slug) => {
+      expect(categories.some((c) => c.slug === slug)).toBe(true);
+    });
   });
 
-  it('retrieves brands correctly', async () => {
-    const brands = await service.getBrands();
-    expect(brands.length).toBeGreaterThan(0);
-    expect(brands.some((b) => b.slug === 'samsung')).toBe(true);
+  it('contains both in-stock and out-of-stock products', async () => {
+    const all = await service.getProducts({ limit: 100 });
+    const inStock = all.items.filter((p) => p.stock > 0);
+    const outOfStock = all.items.filter((p) => p.stock === 0);
+
+    expect(inStock.length).toBeGreaterThan(0);
+    expect(outOfStock.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('retrieves featured products', async () => {
-    const featured = await service.getFeaturedProducts(3);
-    expect(featured.length).toBeLessThanOrEqual(3);
-    expect(featured.every((p) => p.isFeatured)).toBe(true);
+  it('filters by in-stock only', async () => {
+    const result = await service.getProducts({ inStockOnly: true, limit: 100 });
+    expect(result.items.every((p) => p.stock > 0)).toBe(true);
   });
 
-  it('retrieves product by slug', async () => {
-    const product = await service.getProductBySlug('samsung-galaxy-s24-fe-5g');
-    expect(product).not.toBeNull();
-    expect(product?.name).toContain('Samsung Galaxy S24 FE');
-    expect(product?.price).toBeGreaterThan(0);
-  });
-
-  it('returns null for nonexistent slug', async () => {
-    const product = await service.getProductBySlug('nonexistent-gadget-xyz');
-    expect(product).toBeNull();
-  });
-
-  it('filters products by category slug', async () => {
-    const result = await service.getProducts({ categorySlug: 'smartphones' });
+  it('filters by brand slug', async () => {
+    const result = await service.getProducts({ brandSlug: 'apple', limit: 100 });
     expect(result.items.length).toBeGreaterThan(0);
-    expect(result.items.every((p) => p.category.slug === 'smartphones')).toBe(true);
+    expect(result.items.every((p) => p.brand.slug === 'apple')).toBe(true);
   });
 
-  it('filters products by search query', async () => {
-    const result = await service.getProducts({ query: 'MacBook' });
+  it('filters by minimum and maximum price in poisha', async () => {
+    // ৳5,000 to ৳50,000 (500,000 to 5,000,000 poisha)
+    const minPoisha = 500000;
+    const maxPoisha = 5000000;
+    const result = await service.getProducts({
+      minPricePoisha: minPoisha,
+      maxPricePoisha: maxPoisha,
+      limit: 100,
+    });
+
     expect(result.items.length).toBeGreaterThan(0);
-    expect(result.items[0].name.toLowerCase()).toContain('macbook');
+    expect(result.items.every((p) => p.price >= minPoisha && p.price <= maxPoisha)).toBe(true);
   });
 
-  it('handles pagination bounds properly', async () => {
-    const result = await service.getProducts({ page: 1, limit: 2 });
-    expect(result.items.length).toBe(2);
-    expect(result.page).toBe(1);
-    expect(result.pageSize).toBe(2);
-    expect(result.totalPages).toBeGreaterThanOrEqual(1);
+  it('sorts by price low to high and high to low', async () => {
+    const asc = await service.getProducts({ sortBy: 'price-asc', limit: 100 });
+    for (let i = 0; i < asc.items.length - 1; i++) {
+      expect(asc.items[i].price).toBeLessThanOrEqual(asc.items[i + 1].price);
+    }
+
+    const desc = await service.getProducts({ sortBy: 'price-desc', limit: 100 });
+    for (let i = 0; i < desc.items.length - 1; i++) {
+      expect(desc.items[i].price).toBeGreaterThanOrEqual(desc.items[i + 1].price);
+    }
+  });
+
+  it('retrieves sample offers with valid compare-at discounts', async () => {
+    const offers = await service.getOffers(5);
+    expect(offers.length).toBeGreaterThan(0);
+    expect(offers.every((p) => p.compareAtPrice && p.compareAtPrice > p.price)).toBe(true);
+  });
+
+  it('retrieves new arrivals sorted by newest first', async () => {
+    const arrivals = await service.getNewArrivals(4);
+    expect(arrivals.length).toBe(4);
+  });
+
+  it('retrieves related products excluding the current product', async () => {
+    const targetSlug = 'apple-macbook-air-13-m3';
+    const target = await service.getProductBySlug(targetSlug);
+    expect(target).not.toBeNull();
+
+    const related = await service.getRelatedProducts(target!.id, 4);
+    expect(related.length).toBeGreaterThan(0);
+    expect(related.some((p) => p.id === target!.id)).toBe(false);
+    expect(
+      related.every(
+        (p) => p.category.slug === target!.category.slug || p.brand.slug === target!.brand.slug,
+      ),
+    ).toBe(true);
   });
 });

@@ -61,17 +61,20 @@ export const siteConfig: SiteConfig = {
   navItems: [
     { label: 'Home', href: '/' },
     { label: 'All Products', href: '/shop' },
-    { label: 'Smartphones', href: '/shop?category=smartphones' },
-    { label: 'Laptops', href: '/shop?category=laptops' },
-    { label: 'Audio', href: '/shop?category=audio' },
+    { label: 'Smartphones', href: '/category/smartphones' },
+    { label: 'Laptops', href: '/category/laptops' },
+    { label: 'Audio', href: '/category/audio' },
+    { label: 'Smartwatches', href: '/category/smartwatches' },
   ],
   footerNav: {
     shop: [
       { label: 'All Products', href: '/shop' },
-      { label: 'Smartphones', href: '/shop?category=smartphones' },
-      { label: 'Laptops', href: '/shop?category=laptops' },
-      { label: 'Audio & Sound', href: '/shop?category=audio' },
-      { label: 'Smartwatches', href: '/shop?category=smartwatches' },
+      { label: 'Smartphones', href: '/category/smartphones' },
+      { label: 'Laptops', href: '/category/laptops' },
+      { label: 'Audio & Sound', href: '/category/audio' },
+      { label: 'Smartwatches', href: '/category/smartwatches' },
+      { label: 'Gaming Accessories', href: '/category/gaming-accessories' },
+      { label: 'Chargers & Power Banks', href: '/category/chargers-powerbanks' },
     ],
     info: [
       { label: 'Store Overview', href: '/' },

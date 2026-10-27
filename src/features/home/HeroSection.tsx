@@ -79,7 +79,7 @@ export const HeroSection: React.FC = () => {
 
               <div className="mt-4 space-y-3">
                 <Link
-                  to="/shop?category=smartphones"
+                  to="/category/smartphones"
                   className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200/80 hover:border-emerald-300 hover:shadow-xs transition-all group"
                 >
                   <div className="flex items-center gap-3">
@@ -95,7 +95,7 @@ export const HeroSection: React.FC = () => {
                 </Link>
 
                 <Link
-                  to="/shop?category=laptops"
+                  to="/category/laptops"
                   className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200/80 hover:border-emerald-300 hover:shadow-xs transition-all group"
                 >
                   <div className="flex items-center gap-3">
@@ -111,7 +111,7 @@ export const HeroSection: React.FC = () => {
                 </Link>
 
                 <Link
-                  to="/shop?category=audio"
+                  to="/category/audio"
                   className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200/80 hover:border-emerald-300 hover:shadow-xs transition-all group"
                 >
                   <div className="flex items-center gap-3">

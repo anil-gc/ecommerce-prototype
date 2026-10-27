@@ -6,3 +6,5 @@ export * from './Card';
 export * from './Skeleton';
 export * from './EmptyState';
 export * from './InlineError';
+export * from './ProductImage';
+export * from './ProductCard';

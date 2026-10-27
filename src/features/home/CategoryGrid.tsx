@@ -70,7 +70,7 @@ export const CategoryGrid: React.FC = () => {
               return (
                 <Link
                   key={cat.id}
-                  to={`/shop?category=${cat.slug}`}
+                  to={`/category/${cat.slug}`}
                   className="group p-4 rounded-xl border border-slate-200 bg-white hover:border-emerald-500 hover:shadow-xs transition-all flex flex-col items-start justify-between"
                 >
                   <div className="p-2.5 rounded-lg bg-slate-100 text-slate-700 group-hover:bg-emerald-50 group-hover:text-emerald-700 transition-colors mb-3">
