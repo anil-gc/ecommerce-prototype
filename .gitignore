@@ -12,6 +12,23 @@ dist
 dist-ssr
 *.local
 
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Test outputs & Playwright
+test-results/
+playwright-report/
+blob-report/
+coverage/
+
+# Secrets & certificates
+*.pem
+*.key
+*.cert
+*.pfx
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
