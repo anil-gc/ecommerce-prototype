@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { NavLink } from 'react-router-dom';
-import { X, Sparkles, Phone, Mail, MapPin } from 'lucide-react';
+import { NavLink, Link } from 'react-router-dom';
+import { X, Sparkles, Phone, Mail, MapPin, ShoppingBag } from 'lucide-react';
 import { siteConfig } from '@/app/config';
 import { cn } from '@/utils/cn';
+import { useCartStore } from '@/features/cart/cartStore';
 
 export interface MobileMenuProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ export interface MobileMenuProps {
 export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const totalItems = useCartStore((state) => state.getTotalItemCount());
 
   // Close on Escape key
   useEffect(() => {
@@ -80,6 +82,20 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
 
         {/* Navigation links */}
         <div className="flex-1 overflow-y-auto p-4 space-y-1">
+          <Link
+            to="/cart"
+            onClick={onClose}
+            className="flex items-center justify-between px-3.5 py-2.5 mb-3 rounded-xl bg-emerald-50 text-emerald-800 font-bold border border-emerald-200"
+          >
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4 text-emerald-600" aria-hidden="true" />
+              <span>Shopping Cart</span>
+            </div>
+            <span className="h-5 px-2 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-extrabold">
+              {totalItems}
+            </span>
+          </Link>
+
           <p className="px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
             Navigation
           </p>

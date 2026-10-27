@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, ArrowRight, ShoppingBag } from 'lucide-react';
 import type { Product } from '@/types/catalog';
 import { formatBDT } from '@/utils/currency';
+import { useCartStore } from '@/features/cart/cartStore';
 import { ProductImage } from './ProductImage';
 
 export interface ProductCardProps {
@@ -11,6 +12,7 @@ export interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) => {
+  const addItem = useCartStore((state) => state.addItem);
   const inStock = product.stock > 0;
   const hasDiscount = Boolean(product.compareAtPrice && product.compareAtPrice > product.price);
   const discountPercent = hasDiscount
@@ -18,6 +20,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
     : 0;
 
   const keySpecs = Object.entries(product.specifications).slice(0, 2);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(product, 1);
+  };
 
   return (
     <article
@@ -101,9 +109,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
       </div>
 
       {/* Pricing and Action Footer */}
-      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-        <div>
-          <div className="flex items-baseline gap-2">
+      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-base font-extrabold text-slate-900">
               {formatBDT(product.price)}
             </span>
@@ -113,18 +121,36 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
               </span>
             )}
           </div>
-          <p className="text-[10px] text-slate-400">
+          <p className="text-[10px] text-slate-400 truncate">
             Poisha: {product.price.toLocaleString()}
           </p>
         </div>
 
-        <Link
-          to={`/product/${product.slug}`}
-          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
-        >
-          <span>View</span>
-          <ArrowRight className="h-3 w-3" aria-hidden="true" />
-        </Link>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {inStock ? (
+            <button
+              type="button"
+              onClick={handleAddToCart}
+              aria-label={`Add ${product.name} to cart`}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 transition-colors shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+            >
+              <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Add</span>
+            </button>
+          ) : (
+            <span className="px-2 py-1 rounded text-[11px] font-semibold text-slate-400 bg-slate-100">
+              Unavailable
+            </span>
+          )}
+
+          <Link
+            to={`/product/${product.slug}`}
+            aria-label={`View details of ${product.name}`}
+            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+          >
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </div>
       </div>
     </article>
   );

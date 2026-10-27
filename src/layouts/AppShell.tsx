@@ -4,6 +4,7 @@ import { SkipToContent } from '@/components/navigation/SkipToContent';
 import { DemoNotice } from '@/components/feedback/DemoNotice';
 import { Navbar } from '@/components/navigation/Navbar';
 import { Footer } from '@/components/navigation/Footer';
+import { CartToast } from '@/components/feedback/CartToast';
 
 export const AppShell: React.FC = () => {
   return (
@@ -21,6 +22,9 @@ export const AppShell: React.FC = () => {
       <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
         <Outlet />
       </main>
+
+      {/* Cart Feedback Toast */}
+      <CartToast />
 
       {/* Footer */}
       <Footer />

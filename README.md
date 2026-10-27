@@ -1,6 +1,6 @@
 # GadgetBazar — Bangladesh Tech & Gadgets Store Prototype
 
-A scalable, high-performance tech and gadgets e-commerce frontend prototype tailored for the Bangladesh market. Built with modern React, TypeScript, Tailwind CSS, TanStack Query, and an accessible design system.
+A scalable, high-performance tech and gadgets e-commerce frontend prototype tailored for the Bangladesh market. Built with modern React, TypeScript, Tailwind CSS, TanStack Query, Zustand, and an accessible design system.
 
 ---
 
@@ -36,122 +36,57 @@ npm run preview
 
 ---
 
-## 🧭 Routes & Features (Phase 2 Storefront)
+## 🧭 Routes & Features (Phase 3 Cart & Demo Checkout)
 
 | Route | Purpose | Features |
 | :--- | :--- | :--- |
 | `/` | **Storefront Homepage** | Focused hero, architecture highlights, department navigation, featured devices, new arrivals, and sample promotional offers. |
-| `/shop` | **Full Store Catalog** | Faceted filtering (category, brand, BDT price range, in-stock), search query, sorting, active filter chips, and pagination. |
-| `/category/:slug` | **Category Filtered View** | Pre-filtered catalog for departments (Smartphones, Laptops, Audio, Smartwatches, Gaming, Chargers). Unknown slugs render recovery 404 state. |
-| `/product/:slug` | **Product Detail Page (PDP)** | Multi-image gallery with thumbnail switcher, specifications table, stock availability, Bangladesh delivery estimate, and related products. |
+| `/shop` | **Full Store Catalog** | Faceted filtering (category, brand, BDT price range, in-stock), search query, sorting, active filter chips, pagination, and direct "Add" purchase controls. |
+| `/category/:slug` | **Category Filtered View** | Pre-filtered catalog for departments (Smartphones, Laptops, Audio, Smartwatches, Gaming, Chargers). |
+| `/product/:slug` | **Product Detail Page (PDP)** | Multi-image gallery, interactive quantity stepper, "Add to Cart" button with stock limits, specs table, and related devices. |
+| `/cart` | **Shopping Cart** | Editable quantities, remove actions, live inventory clamping, stock reconciliation warnings, BDT subtotal, delivery zone fee calculation, and order total. |
+| `/checkout` | **Demo Checkout Form** | Bangladesh mobile phone validator (`013–019` or `+880`), delivery address, regional zone rates (Inside Dhaka ৳60, Outside ৳120), Cash on Delivery simulation, and duplicate-click protection. |
+| `/order-success` | **Demo Order Confirmation** | Simulated order reference, timestamp, purchased items snapshot, delivery charge, grand total, and "Continue Shopping" navigation. |
 | `*` | **Catch-all 404 Page** | Accessible error screen with clear navigation links back to Home and Shop. |
+
+---
+
+## 🛒 Cart Architecture & Persistence Rules
+
+1. **Zustand State Management**:
+   - Cart lines identified by stable product ID. Adding an existing product increments quantity up to available mock stock.
+   - Rejects quantities exceeding mock stock. Adding out-of-stock items is disabled.
+2. **Versioned `localStorage` Persistence**:
+   - Persists only product IDs and quantities under key `gb_cart_v1` (`{ version: 1, items: [...] }`).
+   - **Never persists calculated totals or prices** — pricing is always freshly derived from catalog data to prevent stale totals or tampering.
+   - **Corrupted Storage Recovery**: Invalid JSON or schema mismatches are caught gracefully and reset without application crashes.
+   - **Catalog Reconciliation**: Upon cart restoration, if any item is out of stock or has reduced inventory, the quantity is automatically clamped and an accessible notification warning is presented to the user.
+3. **Accessible Header Cart Badge & Notifications**:
+   - Real-time cart badge in header reflecting total item count.
+   - Accessible feedback toast (`role="status"`, `aria-live="polite"`) confirming additions with a quick link to `/cart`.
+
+---
+
+## 📦 Bangladesh Regional Delivery & Demo Checkout
+
+1. **Simulated Delivery Charges**:
+   - **Inside Dhaka**: ৳60 (`6,000` integer poisha) • 1–2 business days demo estimate.
+   - **Outside Dhaka**: ৳120 (`12,000` integer poisha) • 3–4 business days demo estimate.
+2. **Bangladesh Phone Validation (`src/utils/phone.ts`)**:
+   - Validates 11-digit local mobile numbers (`013–019`), `+880`, `880`, and hyphenated inputs.
+   - Normalizes to international E.164 and clean hyphenated Bangladesh format (`01700-000000`).
+3. **Privacy & Security Boundaries**:
+   - **No Real Transactions**: Prominently disclosed: *"Demo checkout — use sample details. No order will be placed and no payment will be collected."*
+   - **No Personal Data Stored**: Customer personal data (name, phone, address) is **never saved to localStorage, analytics, or external servers**.
+   - Only a non-personal order snapshot (reference code, items snapshot, totals, delivery zone) is kept in temporary `sessionStorage` for page refresh on `/order-success`.
+   - **Payment Method**: Only *"Cash on delivery — demo only"* is simulated. Digital gateways (bKash, Nagad, cards) are explicitly noted as future roadmap placeholders. No card credentials, PINs, or OTPs are collected.
 
 ---
 
 ## 🔍 Development-Only Inspection Utilities
 
-Per Phase 2 requirements, the catalog service provides transparent, non-intrusive URL parameters for QA and reviewing loading and error states without altering deterministic production behavior:
-
-1. **Simulate Network Latency / Inspect Loading Skeletons**:
-   - Add `?dev_delay=3000` to any catalog URL (e.g., `http://localhost:5173/shop?dev_delay=3000`).
-   - The mock service will artificially hold the query for 3 seconds, letting you inspect skeleton loaders and layout stability.
-2. **Simulate Network Failure / Inspect Retryable Error States**:
-   - Add `?dev_error=true` to any catalog URL (e.g., `http://localhost:5173/shop?dev_error=true`).
-   - The catalog query triggers a recoverable error view equipped with an interactive **"Retry Request"** button.
-
----
-
-## 🏛️ Architecture & Project Structure
-
-The project maintains clear layer boundaries, avoiding unnecessary abstractions while ensuring strong isolation between UI components, state management, and data access.
-
-```
-sakil-ecommerce/
-├── src/
-│   ├── app/                    # Central application configuration & bootstrap
-│   │   ├── config.ts           # Centralized brand, navigation, contact, & delivery rules
-│   │   ├── providers.tsx       # TanStack Query & React providers
-│   │   ├── router.tsx          # React Router route definitions
-│   │   └── tokens.ts           # Reusable design tokens (colors, radii, focus rings)
-│   ├── components/             # Reusable UI & navigation components
-│   │   ├── feedback/           # DemoNotice banner & status feedback
-│   │   ├── navigation/         # Navbar, MobileMenu, Footer, SkipToContent
-│   │   └── ui/                 # Accessible Button, Input, Select, Badge, Card, Skeleton, EmptyState, InlineError, ProductImage, ProductCard
-│   ├── features/               # Feature domain modules
-│   │   ├── home/               # Homepage hero, trust highlights, categories, featured, new arrivals, offers
-│   │   ├── shop/               # Store catalog with FilterSidebar, MobileFilterDrawer, and pagination
-│   │   ├── product/            # ProductDetailPage with gallery, specs, and related devices
-│   │   └── not-found/          # User-friendly 404 page
-│   ├── layouts/                # AppShell container with skip-link, header, & footer
-│   ├── mock/                   # 27 sample products across 6 departments and 8 brands
-│   ├── services/               # Data access layer
-│   │   ├── catalogService.ts   # CatalogService interface & singleton export
-│   │   ├── mockCatalogService.ts # Asynchronous mock service with latency simulation & dev overrides
-│   │   └── useCatalog.ts       # TanStack Query hooks consuming CatalogService
-│   ├── test/                   # Vitest setup & testing utilities
-│   ├── types/                  # Typed domain models (Product, Category, Brand, QueryParams)
-│   ├── utils/                  # Currency (poisha/BDT), classnames (cn), helpers
-│   ├── index.css               # Tailwind CSS v4 entry point & base styles
-│   └── main.tsx                # Application mounting entry point
-├── package.json
-├── package-lock.json
-├── tsconfig.json
-├── tsconfig.app.json
-├── tsconfig.node.json
-├── vite.config.ts
-├── vitest.config.ts
-└── eslint.config.js
-```
-
----
-
-## 💎 Design System & Visual Identity
-
-- **Canvas & Typography**: White/light-gray background (`bg-slate-50`), dark navy typography (`text-slate-900`) for visual hierarchy and readability.
-- **Primary Actions**: Emerald (`#059669` / `bg-emerald-600`), representing tech, growth, and trust in Bangladesh.
-- **Borders & Elevation**: Restrained borders (`border-slate-200`) and subtle shadows (`shadow-2xs` / `shadow-xs`) keep focus squarely on product imagery.
-- **Accessibility (a11y)**:
-  - Skip-to-content keyboard link (`#main-content`).
-  - High-contrast focus rings (`focus-visible:ring-emerald-600 focus-visible:ring-offset-2`).
-  - Semantic HTML (`<header>`, `<nav>`, `<main>`, `<article>`, `<aside>`, `<footer>`).
-  - Form controls with `aria-invalid`, `aria-describedby`, and associated `InlineError`.
-  - Mobile filter drawer and mobile navigation with ESC-key dismissal and focus restoration.
-- **Responsive Layout**: Designed mobile-first, tested and verified across mobile (360px), tablet (768px), and desktop (1440px).
-
----
-
-## 🇧🇩 Bangladesh Context & Currency Handling
-
-1. **Integer Poisha Accounting**:
-   - All prices and compare-at prices are stored as integer poisha (`1 BDT = 100 poisha`, e.g., ৳78,500 = `7850000` poisha).
-   - Prevents floating-point rounding errors during calculations.
-   - Formatted using `Intl.NumberFormat('en-BD')` with Bengali Taka symbol `৳` or `BDT`.
-
-2. **Regional Delivery Rules**:
-   - Inside Dhaka: ৳60 (`6000` poisha)
-   - Outside Dhaka: ৳120 (`12000` poisha)
-   - Centralized in `src/app/config.ts`.
-
-3. **Editable Placeholder Brand**:
-   - Default: `GadgetBazar`. Brand name, support phone (`+880 1700-000000`), support email, and Gulshan-1 Dhaka address are centralized in `src/app/config.ts`.
-
----
-
-## 🔌 Asynchronous Service Boundary
-
-- **Decoupled from Fixtures**: Page components and UI widgets never import mock fixture files directly.
-- **Service Contract**: `CatalogService` defines methods (`getProducts`, `getProductBySlug`, `getFeaturedProducts`, `getNewArrivals`, `getOffers`, `getRelatedProducts`, `getCategories`, `getBrands`).
-- **TanStack Query Ready**: The UI communicates via custom React Query hooks (`useFeaturedProducts`, `useNewArrivals`, `useOffers`, `useRelatedProducts`, `useCategories`, `useProducts`), providing built-in caching, background refetching, and structured loading/error states.
-- **Swappable Backend (Phase 5 ready)**: An API client or Django/DRF adapter can be swapped behind `src/services/catalogService.ts` without touching React components.
-
----
-
-## ⚠️ Prototype Scope Boundaries & Limitations
-
-- **Frontend Only**: No real database, authentication service, or payment gateway.
-- **Simulated Fixtures**: All products, prices, and inventory levels are demo fixtures, not live retail claims.
-- **Phase 2 Scope Boundary**: Purchasing controls, cart additions, quantity modifiers, and checkout belong to Phase 3. Products visibly display real-time availability without inactive or non-functional purchase buttons.
-- **Notice Bar**: A visible demo disclaimer informs visitors that this is an engineering prototype.
+- **Inspect Loading Skeletons**: Append `?dev_delay=3000` to any catalog URL to simulate 3-second latency.
+- **Inspect Retryable Error State**: Append `?dev_error=true` to any catalog URL to trigger a network error and verify the interactive *"Retry Request"* button.
 
 ---
 
@@ -159,16 +94,16 @@ sakil-ecommerce/
 
 - [x] **Phase 1 — Foundation and Design System** *(Completed)*
 - [x] **Phase 2 — Storefront and Product Catalog** *(Completed)*
-  - [x] Created 27 consistent sample products across all 6 departments and 8 brands with both in-stock and out-of-stock items.
-  - [x] Responsive product cards with fixed aspect ratios and image error fallback.
-  - [x] Complete homepage with focused hero, category navigation, featured devices, new arrivals, and fixture-derived offers.
-  - [x] Full route implementation (`/`, `/shop`, `/category/:slug`, `/product/:slug`, 404).
-  - [x] Faceted catalog filtering (category, brand, BDT price range, in-stock status) working synchronously with search and sorting.
-  - [x] URL Search parameter synchronization (browser history, refresh, deep-linking, malformed parameter handling).
-  - [x] Accessible mobile filter drawer with active filter counter badge, apply, and reset actions.
-  - [x] Product detail page with image gallery, specs table, availability notice, delivery estimate, and related products.
-  - [x] Documented dev inspection overrides (`?dev_delay=3000`, `?dev_error=true`).
-  - [x] Automated test suite expanded to 24 tests; 0 ESLint errors; production build verified.
-- [ ] **Phase 3 — Cart and Demo Checkout**
+- [x] **Phase 3 — Cart and Demo Checkout** *(Completed)*
+  - [x] Working purchase controls on product cards and product detail page.
+  - [x] Zustand cart store with add, remove, change quantity, and clear actions.
+  - [x] Real-time stock limit checks and out-of-stock disablement.
+  - [x] Header cart badge with total item quantity and accessible confirmation toasts.
+  - [x] Full `/cart` page with editable quantities, line totals, delivery estimator, and empty cart state.
+  - [x] Versioned, validated `localStorage` persistence with corrupted storage recovery.
+  - [x] Catalog reconciliation for removed products and reduced stock.
+  - [x] Full `/checkout` form with Bangladesh phone normalization and delivery zone selection.
+  - [x] Demo order confirmation flow (`/order-success`) with non-personal sessionStorage snapshots.
+  - [x] Automated test suite expanded to 44 tests across 7 test files (100% passing).
 - [ ] **Phase 4 — Polish, Testing, and Deployment Preparation**
 - [ ] **Phase 5 — Optional Django API Connection**

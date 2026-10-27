@@ -9,11 +9,14 @@ import {
   ChevronRight,
   PackageX,
   ArrowLeft,
-  Sparkles,
+  ShoppingBag,
+  Minus,
+  Plus,
 } from 'lucide-react';
 import { useProductBySlug, useRelatedProducts } from '@/services/useCatalog';
 import { formatBDT } from '@/utils/currency';
 import { siteConfig } from '@/app/config';
+import { useCartStore } from '@/features/cart/cartStore';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -23,6 +26,10 @@ import { ProductCard } from '@/components/ui/ProductCard';
 export const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+
+  const addItem = useCartStore((state) => state.addItem);
+  const cartItems = useCartStore((state) => state.items);
 
   const {
     data: product,
@@ -127,6 +134,22 @@ export const ProductDetailPage: React.FC = () => {
     : 0;
 
   const currentImage = product.images[selectedImageIndex] || product.images[0];
+  const inCartItem = cartItems.find((i) => i.productId === product.id);
+  const inCartQty = inCartItem?.quantity || 0;
+  const remainingStock = Math.max(0, product.stock - inCartQty);
+
+  const handleDecreaseQty = () => {
+    setQuantity((q) => Math.max(1, q - 1));
+  };
+
+  const handleIncreaseQty = () => {
+    setQuantity((q) => Math.min(product.stock, q + 1));
+  };
+
+  const handleAddToCart = () => {
+    if (!inStock) return;
+    addItem(product, quantity);
+  };
 
   return (
     <div className="py-8 md:py-12 bg-slate-50 min-h-screen">
@@ -233,11 +256,11 @@ export const ProductDetailPage: React.FC = () => {
               </p>
             </div>
 
-            {/* Availability Box */}
-            <div className="p-4 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-3">
+            {/* Purchase & Stock Controls */}
+            <div className="p-5 rounded-2xl border border-slate-200 bg-white shadow-2xs space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Stock Availability
+                  Availability
                 </span>
                 {inStock ? (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold border border-emerald-200">
@@ -247,18 +270,74 @@ export const ProductDetailPage: React.FC = () => {
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 text-xs font-semibold border border-rose-200">
                     <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
-                    <span>Out of Stock</span>
+                    <span>Currently Out of Stock</span>
                   </span>
                 )}
               </div>
 
-              {/* Phase 3 Scope disclosure */}
-              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200/80 text-xs text-slate-600 flex items-start gap-2">
-                <Sparkles className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-slate-800">Phase 2 Storefront View:</strong> Product availability is displayed above. Functional cart additions, quantity limits, and demo checkout belong to Phase 3.
+              {inStock ? (
+                <div className="space-y-3 pt-2 border-t border-slate-100">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    {/* Quantity Stepper */}
+                    <div className="flex items-center border border-slate-300 rounded-lg bg-white h-11 w-full sm:w-36 justify-between px-2">
+                      <button
+                        type="button"
+                        onClick={handleDecreaseQty}
+                        disabled={quantity <= 1}
+                        aria-label="Decrease quantity"
+                        className="p-1 rounded text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="text-sm font-bold text-slate-900 w-8 text-center select-none">
+                        {quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleIncreaseQty}
+                        disabled={quantity >= product.stock}
+                        aria-label="Increase quantity"
+                        className="p-1 rounded text-slate-600 hover:text-slate-900 disabled:opacity-30 disabled:pointer-events-none"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {/* Add to Cart Button */}
+                    <Button
+                      size="lg"
+                      variant="primary"
+                      className="flex-1 h-11 text-sm font-bold"
+                      onClick={handleAddToCart}
+                      disabled={remainingStock <= 0}
+                      leftIcon={<ShoppingBag className="h-4 w-4" />}
+                    >
+                      {remainingStock > 0 ? 'Add to Cart' : 'Max Stock in Cart'}
+                    </Button>
+                  </div>
+
+                  {inCartQty > 0 && (
+                    <p className="text-xs text-emerald-700 font-medium flex items-center gap-1.5">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      <span>
+                        You have <strong>{inCartQty}</strong> in your cart{' '}
+                        {remainingStock > 0 ? `(${remainingStock} more available)` : '(reached inventory limit)'}.
+                      </span>
+                    </p>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="pt-2 border-t border-slate-100">
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    disabled
+                    className="w-full text-slate-400"
+                  >
+                    Product Out of Stock
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Description */}

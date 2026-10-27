@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Menu, Cpu } from 'lucide-react';
+import { Menu, Cpu, ShoppingBag } from 'lucide-react';
 import { siteConfig } from '@/app/config';
 import { cn } from '@/utils/cn';
+import { useCartStore } from '@/features/cart/cartStore';
 import { MobileMenu } from './MobileMenu';
 
 export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const totalItems = useCartStore((state) => state.getTotalItemCount());
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
@@ -54,13 +56,27 @@ export const Navbar: React.FC = () => {
             ))}
           </nav>
 
-          {/* Action / Context Area (Working links only: e.g. Catalog Link / Mobile Menu Trigger) */}
+          {/* Action / Context Area (Working Cart + Catalog Link + Mobile Menu Trigger) */}
           <div className="flex items-center gap-3">
             <Link
               to="/shop"
-              className="hidden sm:inline-flex items-center justify-center px-4 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+              className="hidden lg:inline-flex items-center justify-center px-3.5 py-2 text-xs font-semibold uppercase tracking-wider rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
             >
-              Browse Catalog
+              Catalog
+            </Link>
+
+            {/* Cart Link with Badge */}
+            <Link
+              to="/cart"
+              aria-label={`Shopping cart containing ${totalItems} ${totalItems === 1 ? 'item' : 'items'}`}
+              className="relative p-2 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+            >
+              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-emerald-600 text-white text-[11px] font-extrabold flex items-center justify-center ring-2 ring-white animate-in zoom-in-50 duration-150">
+                  {totalItems > 99 ? '99+' : totalItems}
+                </span>
+              )}
             </Link>
 
             {/* Mobile hamburger button */}
